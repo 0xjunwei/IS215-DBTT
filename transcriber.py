@@ -165,7 +165,6 @@ def score_video_quality(video_path):
                 '  "framing": integer,\n'
                 '  "camera_stability": integer,\n'
                 '  "visual_clarity": integer,\n'
-                '  "engagement": integer,\n'
                 '  "issues": [string],\n'
                 '  "recommendations": [string]\n'
                 "}\n\n"
@@ -229,6 +228,7 @@ def combine_scores(transcript_result, video_result):
         "difficulty": transcript_result["transcription_difficulty"],
         "language": transcript_result["language_being_taught"],
         "good_for_learning": transcript_result["is_good_for_learning"],
+        "english_translation": transcript_result["translations"],
         "recommendations": merged_recommendations[:5],
     }
 

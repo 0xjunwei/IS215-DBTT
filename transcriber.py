@@ -1,6 +1,7 @@
 import subprocess
 import sys
 from pathlib import Path
+import threading
 
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -78,7 +79,7 @@ def extract_frames(video_path, max_frames=6):
     Openai cant handle video, thus using ffmpeg to extract frames from the video
     """
     temp_dir = tempfile.mkdtemp()
-
+    # Converts to 1 frame per second and only truncate to first 6 sec frames by default
     cmd = ["ffmpeg", "-i", video_path, "-vf", "fps=1", f"{temp_dir}/frame_%03d.jpg"]
 
     subprocess.run(
@@ -232,6 +233,25 @@ def combine_scores(transcript_result, video_result):
     }
 
 
+def run_transcription_pipeline(mp3_path, prompt, results):
+    """
+    Handles transcription + transcript scoring
+    """
+    text = transcribe_mp3(mp3_path, prompt=prompt)
+    transcript_analysis = score_language_teaching(text)
+
+    results["transcript_text"] = text
+    results["transcript_analysis"] = transcript_analysis
+
+
+def run_video_quality_pipeline(video_path, results):
+    """
+    Handles video frame scoring
+    """
+    video_quality = score_video_quality(video_path)
+    results["video_quality"] = video_quality
+
+
 def main():
     if len(sys.argv) < 2:
         print("Usage: python3 transcribe_video.py input.mp4")
@@ -253,14 +273,34 @@ def main():
         convert_mp4_to_mp3(input_mp4, output_mp3)
         print(f"Extracted audio: {output_mp3}")
 
-        text = transcribe_mp3(output_mp3, prompt=prompt)
-        transcript_analysis = score_language_teaching(text)
-        video_quality = score_video_quality(input_mp4)
+        results = {}
+
+        # Create threads
+        t1 = threading.Thread(
+            target=run_transcription_pipeline,
+            args=(output_mp3, prompt, results),
+        )
+
+        t2 = threading.Thread(
+            target=run_video_quality_pipeline,
+            args=(input_mp4, results),
+        )
+
+        # Start threads
+        t1.start()
+        t2.start()
+
+        # Wait for completion
+        t1.join()
+        t2.join()
+
+        transcript_analysis = results["transcript_analysis"]
+        video_quality = results["video_quality"]
 
         combined = combine_scores(transcript_analysis, video_quality)
 
         print("\nTranscript:")
-        print(text)
+        print(results["transcript_text"])
 
         print("\nFinal Analysis:")
         print(json.dumps(combined, ensure_ascii=False, indent=2))

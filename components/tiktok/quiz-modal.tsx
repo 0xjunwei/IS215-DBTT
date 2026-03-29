@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { CheckCircle2, XCircle, Trophy, Star, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -83,6 +84,7 @@ export function QuizModal({ language, theme, onComplete, onClose }: QuizModalPro
   const [showResult, setShowResult] = useState(false)
   const [correctCount, setCorrectCount] = useState(0)
   const [isComplete, setIsComplete] = useState(false)
+  const [celebrationPulse, setCelebrationPulse] = useState(0)
 
   const handleAnswer = (index: number) => {
     if (showResult) return
@@ -90,6 +92,7 @@ export function QuizModal({ language, theme, onComplete, onClose }: QuizModalPro
     setShowResult(true)
     if (index === questions[currentQuestion].correctAnswer) {
       setCorrectCount(prev => prev + 1)
+      setCelebrationPulse(prev => prev + 1)
     }
   }
 
@@ -104,26 +107,43 @@ export function QuizModal({ language, theme, onComplete, onClose }: QuizModalPro
   }
 
   const xpEarned = correctCount * 25
+  const isCorrectSelection =
+    selectedAnswer !== null &&
+    selectedAnswer === questions[currentQuestion].correctAnswer
 
   if (isComplete) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
         <div className="mx-4 w-full max-w-md animate-in zoom-in-95 rounded-3xl bg-card p-8 shadow-2xl">
           <div className="flex flex-col items-center text-center">
-            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
-              <Trophy className="h-10 w-10 text-primary" />
+            <div className="relative mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
+              <Image
+                src="/duo-owl.svg"
+                alt="Duolingo owl"
+                width={76}
+                height={76}
+                className="duo-victory z-10"
+                priority
+              />
+              <Sparkles className="quiz-celebration-sparkle-left h-5 w-5 text-amber-400" />
+              <Sparkles className="quiz-celebration-sparkle-right h-6 w-6 text-primary" />
             </div>
             <h2 className="mb-2 text-2xl font-black text-foreground">Quiz Complete!</h2>
             <p className="mb-6 text-muted-foreground">
               You got {correctCount} out of {questions.length} correct
             </p>
 
-            <div className="mb-6 flex items-center gap-3 rounded-2xl bg-amber-50 px-6 py-4">
+            <div className="mb-6 flex items-center gap-3 rounded-2xl bg-amber-500/15 px-6 py-4 ring-1 ring-amber-300/35">
               <Star className="h-8 w-8 fill-amber-500 text-amber-500" />
               <div className="text-left">
-                <p className="text-sm text-amber-600">XP Earned</p>
-                <p className="text-2xl font-black text-amber-600">+{xpEarned}</p>
+                <p className="text-sm text-amber-200">XP Earned</p>
+                <p className="text-2xl font-black text-amber-200">+{xpEarned}</p>
               </div>
+            </div>
+
+            <div className="mb-5 flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5">
+              <Trophy className="h-4 w-4 text-primary" />
+              <span className="text-xs font-bold text-primary">Duo says: Nice work. Keep the streak alive.</span>
             </div>
 
             <div className="flex w-full gap-3">
@@ -165,11 +185,29 @@ export function QuizModal({ language, theme, onComplete, onClose }: QuizModalPro
         </div>
 
         {/* Question Badge */}
-        <div className="mb-4 flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          <span className="text-sm font-semibold text-primary">
-            Question {currentQuestion + 1} of {questions.length}
-          </span>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            <span className="text-sm font-semibold text-primary">
+              Question {currentQuestion + 1} of {questions.length}
+            </span>
+          </div>
+          <div className="relative">
+            <Image
+              src="/duo-owl.svg"
+              alt="Duolingo owl coach"
+              width={56}
+              height={56}
+              className={cn(
+                "drop-shadow-md",
+                showResult && isCorrectSelection ? "duo-celebrate" : "duo-idle"
+              )}
+              priority
+            />
+            {showResult && isCorrectSelection && (
+              <Sparkles key={celebrationPulse} className="quiz-celebration-sparkle-right h-5 w-5 text-amber-400" />
+            )}
+          </div>
         </div>
 
         {/* Question */}
@@ -189,13 +227,21 @@ export function QuizModal({ language, theme, onComplete, onClose }: QuizModalPro
                 onClick={() => handleAnswer(index)}
                 disabled={showResult}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-2xl border-2 p-4 text-left font-medium transition-all",
+                  "relative flex w-full items-center gap-3 overflow-hidden rounded-2xl border-2 p-4 text-left font-medium transition-all",
                   !showResult && "hover:border-primary hover:bg-primary/5",
                   showResult && isCorrect && "border-primary bg-primary/10 text-primary",
+                  showResult && isCorrectSelection && isCorrect && "quiz-correct-answer",
                   showResult && isSelected && !isCorrect && "border-destructive bg-destructive/10 text-destructive",
                   !showResult && "border-border"
                 )}
               >
+                {showResult && isCorrectSelection && isCorrect && (
+                  <>
+                    <span className="quiz-xp-pop">+25 XP</span>
+                    <Sparkles className="quiz-answer-sparkle-left h-4 w-4 text-amber-400" />
+                    <Sparkles className="quiz-answer-sparkle-right h-5 w-5 text-primary" />
+                  </>
+                )}
                 <div className={cn(
                   "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-sm font-bold",
                   showResult && isCorrect && "border-primary bg-primary text-primary-foreground",
@@ -218,7 +264,7 @@ export function QuizModal({ language, theme, onComplete, onClose }: QuizModalPro
             "mb-6 rounded-xl p-4",
             selectedAnswer === questions[currentQuestion].correctAnswer
               ? "bg-primary/10 text-primary"
-              : "bg-amber-50 text-amber-700"
+              : "bg-amber-500/15 text-amber-100 ring-1 ring-amber-300/35"
           )}>
             <p className="text-sm font-medium">
               {questions[currentQuestion].explanation}

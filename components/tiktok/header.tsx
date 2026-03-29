@@ -13,12 +13,12 @@ interface HeaderProps {
 }
 
 const levelColors: Record<string, string> = {
-  A1: "bg-emerald-100 text-emerald-700",
-  A2: "bg-green-100 text-green-700",
-  B1: "bg-sky-100 text-sky-700",
-  B2: "bg-blue-100 text-blue-700",
-  C1: "bg-violet-100 text-violet-700",
-  C2: "bg-amber-100 text-amber-700",
+  A1: "bg-emerald-500/20 text-emerald-200 ring-1 ring-emerald-300/40",
+  A2: "bg-green-500/20 text-green-200 ring-1 ring-green-300/40",
+  B1: "bg-sky-500/20 text-sky-200 ring-1 ring-sky-300/40",
+  B2: "bg-blue-500/20 text-blue-200 ring-1 ring-blue-300/40",
+  C1: "bg-violet-500/20 text-violet-200 ring-1 ring-violet-300/40",
+  C2: "bg-amber-500/20 text-amber-200 ring-1 ring-amber-300/40",
 }
 
 export function Header({ activeLanguage, onLanguageChange, xp = 0, streak = 0, level = "A1" }: HeaderProps) {

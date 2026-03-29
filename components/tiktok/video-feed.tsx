@@ -796,13 +796,17 @@ interface VideoFeedProps {
   onShowTranscript?: () => void
 }
 
+const TIKTOK_ASPECT_RATIO = 9 / 16
+
 export function VideoFeed({ language, theme, onVideoChange, onAllVideosWatched, showQuiz, onQuizComplete, onShowTranscript }: VideoFeedProps) {
   const allVideos = language === "bahasa" ? bahasaVideos : chineseVideos
   const videos = allVideos[theme] || allVideos.food
   const [activeIndex, setActiveIndex] = useState(0)
   const [watchedVideos, setWatchedVideos] = useState<Set<string>>(new Set())
   const [hasTriggeredQuiz, setHasTriggeredQuiz] = useState(false)
+  const [frameSize, setFrameSize] = useState({ width: 0, height: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
+  const stageRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setActiveIndex(0)
@@ -860,44 +864,95 @@ export function VideoFeed({ language, theme, onVideoChange, onAllVideosWatched, 
     }
   }, [videos])
 
+  useEffect(() => {
+    const stage = stageRef.current
+    if (!stage) return
+
+    const updateFrameSize = () => {
+      const stageWidth = stage.clientWidth
+      const stageHeight = stage.clientHeight
+
+      if (stageWidth === 0 || stageHeight === 0) return
+
+      let nextWidth = stageWidth
+      let nextHeight = nextWidth / TIKTOK_ASPECT_RATIO
+
+      if (nextHeight > stageHeight) {
+        nextHeight = stageHeight
+        nextWidth = nextHeight * TIKTOK_ASPECT_RATIO
+      }
+
+      setFrameSize(prev => {
+        const widthChanged = Math.abs(prev.width - nextWidth) > 0.5
+        const heightChanged = Math.abs(prev.height - nextHeight) > 0.5
+        return widthChanged || heightChanged ? { width: nextWidth, height: nextHeight } : prev
+      })
+    }
+
+    updateFrameSize()
+
+    const observer = new ResizeObserver(updateFrameSize)
+    observer.observe(stage)
+
+    return () => observer.disconnect()
+  }, [])
+
+  const hasMeasuredFrame = frameSize.width > 0 && frameSize.height > 0
+
   return (
-    <div className="relative h-full w-full">
-      {/* Progress indicator */}
-      <div className="absolute left-4 top-4 z-20 flex items-center gap-2 rounded-full bg-card/90 px-3 py-1.5 backdrop-blur-sm">
-        <span className="text-xs font-semibold text-foreground">
-          {activeIndex + 1}/{videos.length}
-        </span>
-        <div className="flex gap-1">
-          {videos.map((_, index) => (
+    <div className="relative h-full w-full bg-[radial-gradient(circle_at_top,_#2f4360_0%,_#233449_38%,_#162231_100%)]">
+      <div className="absolute inset-0 p-1 sm:p-2 md:p-4">
+        <div ref={stageRef} className="flex h-full w-full items-center justify-center">
+          <div
+            className="relative h-full w-full overflow-hidden bg-black sm:rounded-2xl"
+            style={
+              hasMeasuredFrame
+                ? {
+                  width: `${frameSize.width}px`,
+                  height: `${frameSize.height}px`,
+                }
+                : undefined
+            }
+          >
+            {/* Progress indicator */}
+            <div className="absolute left-4 top-4 z-20 flex items-center gap-2 rounded-full bg-card/90 px-3 py-1.5 backdrop-blur-sm">
+              <span className="text-xs font-semibold text-foreground">
+                {activeIndex + 1}/{videos.length}
+              </span>
+              <div className="flex gap-1">
+                {videos.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`h-1.5 w-4 rounded-full transition-colors md:w-6 ${index === activeIndex ? "bg-primary" : "bg-muted"
+                      }`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Mobile Transcript Button */}
+            {onShowTranscript && (
+              <button
+                onClick={onShowTranscript}
+                className="absolute bottom-6 right-4 z-20 flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-lg lg:hidden"
+              >
+                <FileText className="h-4 w-4" />
+                Transcript
+              </button>
+            )}
+
             <div
-              key={index}
-              className={`h-1.5 w-4 rounded-full transition-colors md:w-6 ${index === activeIndex ? "bg-primary" : "bg-muted"
-                }`}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Mobile Transcript Button */}
-      {onShowTranscript && (
-        <button
-          onClick={onShowTranscript}
-          className="absolute bottom-6 right-4 z-20 flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-lg lg:hidden"
-        >
-          <FileText className="h-4 w-4" />
-          Transcript
-        </button>
-      )}
-
-      <div
-        ref={containerRef}
-        className="h-full w-full snap-y snap-mandatory overflow-y-scroll scrollbar-hide"
-      >
-        {videos.map((video, index) => (
-          <div key={video.id} className="h-full w-full snap-start">
-            <VideoCard video={video} isActive={index === activeIndex} />
+              ref={containerRef}
+              className="h-full w-full snap-y snap-mandatory overflow-y-scroll scrollbar-hide"
+            >
+              {videos.map((video, index) => (
+                <div key={video.id} className="h-full w-full snap-start">
+                  <VideoCard video={video} isActive={index === activeIndex} />
+                </div>
+              ))}
+            </div>
           </div>
-        ))}
+        </div>
       </div>
 
       {/* Quiz Modal */}

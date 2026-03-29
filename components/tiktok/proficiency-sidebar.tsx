@@ -51,7 +51,7 @@ export function ProficiencySidebar({ level, xp, streak }: ProficiencySidebarProp
       <div className="flex flex-col items-center gap-4">
         {/* XP */}
         <div className="flex flex-col items-center gap-0.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20 ring-1 ring-amber-300/35">
             <Star className="h-5 w-5 fill-amber-500 text-amber-500" />
           </div>
           <span className="text-xs font-bold text-foreground">{xp}</span>
@@ -60,7 +60,7 @@ export function ProficiencySidebar({ level, xp, streak }: ProficiencySidebarProp
 
         {/* Streak */}
         <div className="flex flex-col items-center gap-0.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/20 ring-1 ring-orange-300/35">
             <Flame className="h-5 w-5 fill-orange-500 text-orange-500" />
           </div>
           <span className="text-xs font-bold text-foreground">{streak}</span>
@@ -69,7 +69,7 @@ export function ProficiencySidebar({ level, xp, streak }: ProficiencySidebarProp
 
         {/* Goals */}
         <div className="flex flex-col items-center gap-0.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-100">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-500/20 ring-1 ring-sky-300/35">
             <Target className="h-5 w-5 text-sky-500" />
           </div>
           <span className="text-xs font-bold text-foreground">3/5</span>
@@ -78,7 +78,7 @@ export function ProficiencySidebar({ level, xp, streak }: ProficiencySidebarProp
 
         {/* Achievements */}
         <div className="flex flex-col items-center gap-0.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/20 ring-1 ring-violet-300/35">
             <Trophy className="h-5 w-5 text-violet-500" />
           </div>
           <span className="text-xs font-bold text-foreground">12</span>

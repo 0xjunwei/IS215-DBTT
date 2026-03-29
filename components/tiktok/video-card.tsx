@@ -25,6 +25,8 @@ interface VideoData {
 interface VideoCardProps {
   video: VideoData
   isActive: boolean
+  muted: boolean
+  onMuteChange: (nextMuted: boolean) => void
 }
 
 const levelColors: Record<string, string> = {
@@ -36,11 +38,10 @@ const levelColors: Record<string, string> = {
   C2: "bg-violet-500",
 }
 
-export function VideoCard({ video, isActive }: VideoCardProps) {
+export function VideoCard({ video, isActive, muted, onMuteChange }: VideoCardProps) {
   const [liked, setLiked] = useState(false)
   const [bookmarked, setBookmarked] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [isMuted, setIsMuted] = useState(true)
   const [showPlayPause, setShowPlayPause] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -56,6 +57,12 @@ export function VideoCard({ video, isActive }: VideoCardProps) {
     }
   }, [isActive])
 
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = muted
+    }
+  }, [muted])
+
   const togglePlay = () => {
     if (videoRef.current) {
       if (isPlaying) {
@@ -70,10 +77,7 @@ export function VideoCard({ video, isActive }: VideoCardProps) {
   }
 
   const toggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted
-      setIsMuted(!isMuted)
-    }
+    onMuteChange(!muted)
   }
 
   const formatCount = (num: number) => {
@@ -91,7 +95,7 @@ export function VideoCard({ video, isActive }: VideoCardProps) {
           className="h-full w-full object-cover"
           src={video.videoUrl}
           loop
-          muted={isMuted}
+          muted={muted}
           playsInline
           preload="auto"
         />
@@ -217,7 +221,7 @@ export function VideoCard({ video, isActive }: VideoCardProps) {
         onClick={toggleMute}
         className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/30 backdrop-blur-sm"
       >
-        {isMuted ? (
+        {muted ? (
           <VolumeX className="h-4 w-4 text-white" />
         ) : (
           <Volume2 className="h-4 w-4 text-white" />

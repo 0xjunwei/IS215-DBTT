@@ -75,6 +75,50 @@ const chineseQuizzes: Record<string, QuizQuestion[]> = {
   ],
 }
 
+function playCorrectAnswerSound() {
+  if (typeof window === "undefined") return
+
+  try {
+    const audioContextCtor =
+      window.AudioContext ||
+      (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+
+    if (!audioContextCtor) return
+
+    const ctx = new audioContextCtor()
+    const now = ctx.currentTime
+
+    const notes = [
+      { frequency: 660, start: now, duration: 0.09, gain: 0.08 },
+      { frequency: 880, start: now + 0.1, duration: 0.16, gain: 0.1 },
+    ]
+
+    notes.forEach(({ frequency, start, duration, gain }) => {
+      const osc = ctx.createOscillator()
+      const amp = ctx.createGain()
+
+      osc.type = "triangle"
+      osc.frequency.setValueAtTime(frequency, start)
+
+      amp.gain.setValueAtTime(0.0001, start)
+      amp.gain.linearRampToValueAtTime(gain, start + 0.015)
+      amp.gain.exponentialRampToValueAtTime(0.0001, start + duration)
+
+      osc.connect(amp)
+      amp.connect(ctx.destination)
+
+      osc.start(start)
+      osc.stop(start + duration + 0.02)
+    })
+
+    window.setTimeout(() => {
+      void ctx.close().catch(() => {})
+    }, 600)
+  } catch {
+    // Ignore audio failures (browser policy/device constraints)
+  }
+}
+
 export function QuizModal({ language, theme, onComplete, onClose }: QuizModalProps) {
   const quizzes = language === "bahasa" ? bahasaQuizzes : chineseQuizzes
   const questions = quizzes[theme] || quizzes.food
@@ -91,6 +135,7 @@ export function QuizModal({ language, theme, onComplete, onClose }: QuizModalPro
     setSelectedAnswer(index)
     setShowResult(true)
     if (index === questions[currentQuestion].correctAnswer) {
+      playCorrectAnswerSound()
       setCorrectCount(prev => prev + 1)
       setCelebrationPulse(prev => prev + 1)
     }

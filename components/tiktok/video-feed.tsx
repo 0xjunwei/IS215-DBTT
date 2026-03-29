@@ -804,9 +804,11 @@ export function VideoFeed({ language, theme, onVideoChange, onAllVideosWatched, 
   const [activeIndex, setActiveIndex] = useState(0)
   const [watchedVideos, setWatchedVideos] = useState<Set<string>>(new Set())
   const [hasTriggeredQuiz, setHasTriggeredQuiz] = useState(false)
+  const [isMuted, setIsMuted] = useState(true)
   const [frameSize, setFrameSize] = useState({ width: 0, height: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
+  const effectiveMuted = isMuted || !!showQuiz
 
   useEffect(() => {
     setActiveIndex(0)
@@ -947,7 +949,12 @@ export function VideoFeed({ language, theme, onVideoChange, onAllVideosWatched, 
             >
               {videos.map((video, index) => (
                 <div key={video.id} className="h-full w-full snap-start">
-                  <VideoCard video={video} isActive={index === activeIndex} />
+                  <VideoCard
+                    video={video}
+                    isActive={index === activeIndex}
+                    muted={effectiveMuted}
+                    onMuteChange={setIsMuted}
+                  />
                 </div>
               ))}
             </div>
